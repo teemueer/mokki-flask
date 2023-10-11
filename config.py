@@ -14,7 +14,6 @@ class Config:
     MQTT_TLS_ENABLED = True
     MQTT_TLS_CA_CERTS = '/etc/mosquitto/certs/mosquitto.crt'
     MQTT_TLS_VERSION = ssl.PROTOCOL_TLSv1_2
-    MQTT_TLS_INSECURE = True
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 

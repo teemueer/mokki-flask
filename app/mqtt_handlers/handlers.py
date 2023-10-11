@@ -1,24 +1,24 @@
 import json
 from flask import current_app
 from paho.mqtt.client import MQTT_LOG_ERR, MQTT_LOG_WARNING
-#from .. import mqtt, db
-from app.models import Pico, Temperature, Humidity
+from app.models import Pico, Temperature, Humidity, Voltage
 
 def setup_handlers(app, mqtt, db):
 
     @mqtt.on_connect()
     def handle_connect(client, userdata, flags, rc):
-        mqtt.subscribe('mokki/room1')
+        mqtt.subscribe('mokki/#')
 
     @mqtt.on_message()
     def handle_message(client, userdata, message):
         data = json.loads(message.payload.decode())
 
         pico_id = data['id']
-        temperature = data['temperature']
-        humidity = data['humidity']
+        temperature = data['dht22']['temperature']
+        humidity = data['dht22']['humidity']
+        voltage = data['ky018']['voltage']
 
-        print(pico_id, temperature, humidity)
+        print(pico_id, temperature, humidity, voltage)
 
         with app.app_context():
             pico = Pico.query.filter_by(unique_id=pico_id).first()
@@ -29,9 +29,11 @@ def setup_handlers(app, mqtt, db):
 
             new_temperature = Temperature(value=temperature, pico_id=pico.id)
             new_humidity = Humidity(value=humidity, pico_id=pico.id)
+            new_voltage = Voltage(value=voltage, pico_id=pico.id)
 
             db.session.add(new_temperature)
             db.session.add(new_humidity)
+            db.session.add(new_voltage)
             db.session.commit()
 
         

@@ -2,7 +2,7 @@ import os
 from flask import Flask
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-from flask_restful import Api
+from flask_restx import Api
 from flask_jwt_extended import JWTManager
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
@@ -41,7 +41,7 @@ def create_app(config_name: str = "default") -> Flask:
     from app.resources.room import RoomList, Room
     from app.resources.user import UserRegister, UserLogin, UserLogout, User
 
-    api = Api(app)
+    api = Api(app, version="1.0", title="Mokki API")
 
     # Rooms
     api.add_resource(RoomList, "/rooms")

@@ -1,6 +1,8 @@
 import unittest
+
 from app import create_app, db
 from app.models.user import UserModel
+from app.models.room import RoomModel
 
 
 class APITestCase(unittest.TestCase):
@@ -10,13 +12,6 @@ class APITestCase(unittest.TestCase):
         self.app_context.push()
         db.create_all()
         self.client = self.app.test_client()
-
-        user = UserModel(username="admin", password="password")
-        user.save_to_db()
-        res = self.client.post(
-            "/login", json={"username": "admin", "password": "password"}
-        )
-        self.token = res.get_json()["access_token"]
 
     def tearDown(self):
         db.session.remove()
@@ -37,11 +32,14 @@ class APITestCase(unittest.TestCase):
         self.assertEqual(user.username, "testuser")
 
     def test_user_login(self):
+        user = UserModel(username="testuser", password="testpass")
+        user.save_to_db()
+
         res = self.client.post(
             "/login",
             json={
-                "username": "admin",
-                "password": "password",
+                "username": "testuser",
+                "password": "testpass",
             },
         )
         self.assertEqual(res.status_code, 200)
@@ -49,12 +47,56 @@ class APITestCase(unittest.TestCase):
         self.assertIn("access_token", data)
 
     def test_bad_user_login(self):
+        user = UserModel(username="testuser", password="testpass")
+        user.save_to_db()
+
         res = self.client.post(
             "/login",
             json={
-                "username": "admin",
+                "username": "testuser",
                 "password": "1234",
             },
         )
         self.assertEqual(res.status_code, 401)
 
+    def test_create_room(self):
+        user = UserModel(username="testuser", password="testpass")
+        user.save_to_db()
+        token = user.get_token()
+
+        res = self.client.post(
+            "/rooms",
+            json={"name": "room1"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        self.assertEqual(res.status_code, 201)
+
+    def test_create_rooms_with_same_name(self):
+        user = UserModel(username="testuser", password="testpass")
+        user.save_to_db()
+        token = user.get_token()
+
+        room = RoomModel(name="test_room", user_id=user.id)
+        room.save_to_db()
+
+        res = self.client.post(
+            "/rooms",
+            json={"name": "test_room"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        self.assertEqual(res.status_code, 400)
+
+    def test_create_device(self):
+        user = UserModel(username="testuser", password="testpass")
+        user.save_to_db()
+        token = user.get_token()
+
+        room = RoomModel(name="test_room", user_id=user.id)
+        room.save_to_db()
+
+        res = self.client.post(
+            "/devices",
+            json={"name": "test_device", "room_id": room.id},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        self.assertEqual(res.status_code, 201)

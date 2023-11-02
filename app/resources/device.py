@@ -1,5 +1,10 @@
+import asyncio
+import os
+import json
+import uuid
+from bleak import BleakScanner, BleakClient
 from flask import request
-from flask_restful import Resource
+from flask_restx import Resource
 from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
 
 from app.models.device import DeviceModel
@@ -74,6 +79,7 @@ class DeviceList(Resource):
         devices = DeviceModel.find_all()
         return device_list_schema.dump(devices), 200
 
+"""
     @classmethod
     @jwt_required()
     def post(cls, room_id: int):
@@ -93,25 +99,59 @@ class DeviceList(Resource):
             return {"message": ERROR_INSERTING}, 400
 
         return device_schema.dump(device), 201
-
-
 """
+
+async def send_credentials(name, chunk_size=20):
+    device = await BleakScanner.find_device_by_name(name)
+    if not device:
+        return
+
+    uid = str(uuid.uuid4())
+
+    async with BleakClient(device.address) as client:
+        chars = [
+            char for service in client.services for char in service.characteristics
+        ]
+        writable_char = next(
+            (char for char in chars if "write" in char.properties), None
+        )
+
+        data = {
+            "wlan_ssid": os.environ.get("WLAN_SSID"),
+            "wlan_password": os.environ.get("WLAN_PASSWORD"),
+            "uid": uid,
+            "mqtt_broker_url": os.environ.get("MQTT_BROKER_URL"),
+        }
+
+        data = json.dumps(data).encode() + b"\0"
+        chunks = [data[i : i + chunk_size] for i in range(0, len(data), chunk_size)]
+
+        for chunk in chunks:
+            await client.write_gatt_char(writable_char, chunk, response=False)
+
+    return uid
+
+loop = asyncio.get_event_loop()
+
+
 class DeviceRegister(Resource):
     @classmethod
     # @jwt_required()
-    def get(cls, unique_id: str):
-        device = DeviceModel.find_by_unique_id(unique_id=unique_id)
-        if device:
-            return {"message": UNIQUE_ID_ALREADY_EXISTS.format(unique_id)}, 400
+    def get(cls):
+        name = request.args.get("name")
+        uid = loop.run_until_complete(send_credentials(name))
 
-        device = device_schema.load({"unique_id": unique_id})
+        device_json = {"uid": uid, "room_id": "1", "name": name}
+        device = device_schema.load(device_json)
 
         try:
             device.save_to_db()
         except:
-            return {"message": ERROR_INSERTING}, 500
+            return {"message": ERROR_INSERTING}, 400
 
         return device_schema.dump(device), 201
+
+"""
 
 
 class DeviceToken(Resource):

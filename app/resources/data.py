@@ -1,5 +1,5 @@
 from flask import request
-from flask_restful import Resource
+from flask_restx import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from influxdb_client.client.query_api import QueryApi
 
@@ -11,6 +11,7 @@ DEVICE_NOT_FOUND = "Device not found."
 
 data_schema = DataSchema()
 data_schema_list = DataSchema(many=True)
+
 
 class Data(Resource):
     @classmethod

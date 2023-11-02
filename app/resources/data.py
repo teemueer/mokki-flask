@@ -12,6 +12,7 @@ DEVICE_NOT_FOUND = "Device not found."
 data_schema = DataSchema()
 data_schema_list = DataSchema(many=True)
 
+
 class Data(Resource):
     @classmethod
     @jwt_required()

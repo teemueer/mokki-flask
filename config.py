@@ -14,7 +14,7 @@ class Config:
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    MQTT_BROKER_URL = os.environ.get("MQTT_BROKER_URL", "debian.local")
+    MQTT_BROKER_URL = os.environ.get("MQTT_BROKER_URL")
     MQTT_BROKER_PORT = 8883
     MQTT_USERNAME = os.environ.get("MQTT_USERNAME", "")
     MQTT_PASSWORD = os.environ.get("MQTT_PASSWORD", "")

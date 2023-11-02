@@ -23,6 +23,7 @@ def handle_message(client, userdata, message):
     with mqtt.app.app_context():
         device = DeviceModel.find_by_uid(uid)
         if not device:
+            print("No such device")
             return
 
         point = (
@@ -32,6 +33,8 @@ def handle_message(client, userdata, message):
             .field("humidity", data["humidity"])
             .field("light_level", data["light_level"])
         )
+
+        print(point)
 
         write_api = influx_db.write_api(write_options=SYNCHRONOUS)
         write_api.write(bucket="mokki", org="sensec", record=point)

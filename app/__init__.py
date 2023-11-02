@@ -36,7 +36,7 @@ def create_app(config_name: str = "default") -> Flask:
     ma.init_app(app)
     migrate.init_app(app, db)
 
-    from app.resources.device import DeviceList, Device
+    from app.resources.device import DeviceRegister, DeviceList, Device
     from app.resources.data import Data
     from app.resources.room import RoomList, Room
     from app.resources.user import UserRegister, UserLogin, UserLogout, User
@@ -48,6 +48,7 @@ def create_app(config_name: str = "default") -> Flask:
     api.add_resource(Room, "/rooms/<int:room_id>")
 
     # Devices
+    api.add_resource(DeviceRegister, "/devices/register")
     api.add_resource(DeviceList, "/rooms/<int:room_id>/devices")
     api.add_resource(Device, "/devices/<int:device_id>")
     api.add_resource(Data, "/devices/<int:device_id>/data")

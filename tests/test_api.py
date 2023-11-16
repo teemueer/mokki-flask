@@ -20,7 +20,7 @@ class APITestCase(unittest.TestCase):
 
     def test_user_registration(self):
         res = self.client.post(
-            "/register",
+            "/users",
             json={
                 "username": "testuser",
                 "password": "testpass",
@@ -36,7 +36,7 @@ class APITestCase(unittest.TestCase):
         user.save_to_db()
 
         res = self.client.post(
-            "/login",
+            "/auth/login",
             json={
                 "username": "testuser",
                 "password": "testpass",
@@ -51,7 +51,7 @@ class APITestCase(unittest.TestCase):
         user.save_to_db()
 
         res = self.client.post(
-            "/login",
+            "/auth/login",
             json={
                 "username": "testuser",
                 "password": "1234",
@@ -86,7 +86,7 @@ class APITestCase(unittest.TestCase):
         )
         self.assertEqual(res.status_code, 400)
 
-    def test_create_device(self):
+    def test_rename_room(self):
         user = UserModel(username="testuser", password="testpass")
         user.save_to_db()
         token = user.get_token()
@@ -94,9 +94,11 @@ class APITestCase(unittest.TestCase):
         room = RoomModel(name="test_room", user_id=user.id)
         room.save_to_db()
 
-        res = self.client.post(
-            "/devices",
-            json={"name": "test_device", "room_id": room.id},
+        res = self.client.patch(
+            f"/rooms/{room.id}",
+            json={"name": "renamed_room"},
             headers={"Authorization": f"Bearer {token}"},
         )
-        self.assertEqual(res.status_code, 201)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json["name"], "renamed_room")
+

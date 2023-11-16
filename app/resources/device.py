@@ -17,6 +17,8 @@ ERROR_INSERTING = "An error occured while inserting the device."
 DEVICE_NOT_FOUND = "Device not found."
 DEVICE_DELETED = "Device deleted."
 ROOM_NOT_FOUND_OR_NO_ACCESS = "Room not found or you don't have access to it."
+ERROR_PAIRING_DEVICE = "Error pairing device via bluetooth."
+NAME_WAS_NOT_PROVIDED = "Name was not provided."
 
 device_schema = DeviceSchema()
 device_list_schema = DeviceSchema(many=True)
@@ -45,26 +47,24 @@ class Device(Resource):
 
     @classmethod
     @jwt_required()
-    def put(cls, device_id: int):
+    def patch(cls, device_id: int):
         device = DeviceModel.find_by_id(device_id)
         if not device or device.room.user_id != get_jwt_identity():
             return {"message": DEVICE_NOT_FOUND}, 404
 
         device_json = request.get_json()
+        name = device_json.get("name")
+        if not name:
+            return {"message": NAME_WAS_NOT_PROVIDED}, 400
 
-        if device:
-            device.name = device_json["name"]
-            status_code = 200
-        else:
-            device = device_schema.load(device_json)
-            status_code = 201
+        device.name = name
 
         try:
             device.save_to_db()
         except:
             return {"message": ERROR_INSERTING}, 500
 
-        return device_schema.dump(device), status_code
+        return device_schema.dump(device), 200
 
 
 class DeviceList(Resource):
@@ -79,27 +79,6 @@ class DeviceList(Resource):
         devices = DeviceModel.find_all()
         return device_list_schema.dump(devices), 200
 
-"""
-    @classmethod
-    @jwt_required()
-    def post(cls, room_id: int):
-        room = RoomModel.find_by_id(room_id)
-
-        if not room or room.user_id != get_jwt_identity():
-            return {"message": ROOM_NOT_FOUND_OR_NO_ACCESS}, 404
-
-        device_json = request.get_json()
-        device_json["room_id"] = room.id
-
-        device = device_schema.load(device_json)
-
-        try:
-            device.save_to_db()
-        except:
-            return {"message": ERROR_INSERTING}, 400
-
-        return device_schema.dump(device), 201
-"""
 
 async def send_credentials(name, chunk_size=20):
     device = await BleakScanner.find_device_by_name(name)
@@ -131,15 +110,18 @@ async def send_credentials(name, chunk_size=20):
 
     return uid
 
-loop = asyncio.get_event_loop()
-
-
 class DeviceRegister(Resource):
     @classmethod
-    # @jwt_required()
+    @jwt_required()
     def get(cls):
         name = request.args.get("name")
-        uid = loop.run_until_complete(send_credentials(name))
+        
+        try:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            uid = loop.run_until_complete(send_credentials(name))
+        except:
+            return {"message": ERROR_PAIRING_DEVICE}, 404
 
         device_json = {"uid": uid, "room_id": "1", "name": name}
         device = device_schema.load(device_json)
@@ -151,20 +133,3 @@ class DeviceRegister(Resource):
 
         return device_schema.dump(device), 201
 
-"""
-
-
-class DeviceToken(Resource):
-    @classmethod
-    def get(cls, unique_id: str):
-        device = DeviceModel.find_by_unique_id(unique_id=unique_id)
-        if not device:
-            return {"message": DEVICE_NOT_FOUND.format(unique_id)}, 400
-
-        access_token = create_access_token(
-            identity=unique_id, expires_delta=timedelta(minutes=10)
-        )
-        return {"access_token": access_token}, 200
-
-
-"""

@@ -35,7 +35,7 @@ class Room(Resource):
         room.delete_from_db()
 
         return {"message": ROOM_DELETED}, 200
-    
+
     @classmethod
     @jwt_required()
     def patch(cls, room_id: int):

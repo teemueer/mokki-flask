@@ -8,7 +8,7 @@ from app.models.device import DeviceModel
 
 @mqtt.on_connect()
 def handle_connect(client, userdata, flags, rc):
-    mqtt.subscribe("sensors/#")
+    mqtt.subscribe("data/#")
 
 
 @mqtt.on_message()
@@ -34,7 +34,7 @@ def handle_message(client, userdata, message):
             .field("light_level", data["light_level"])
         )
 
-        print(point)
+        # print(point)
 
         write_api = influx_db.write_api(write_options=SYNCHRONOUS)
         write_api.write(bucket="mokki", org="sensec", record=point)

@@ -23,9 +23,13 @@ class Config:
     MQTT_TLS_ENABLED = True
     MQTT_TLS_VERSION = ssl.PROTOCOL_TLS_CLIENT
 
+    MIN_TEMPERATURE = 1
+    MAX_TEMPERATURE = 40
+
 
 class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get("DEV_DATABASE_URL")
+
 
 class TestingConfig(Config):
     TESTING = True

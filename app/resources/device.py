@@ -4,7 +4,7 @@ import json
 import uuid
 from bleak import BleakScanner, BleakClient
 from flask import request, current_app
-from flask_restx import Resource, reqparse
+from flask_restx import Resource, reqparse, Api
 from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
 
 from app.models.device import DeviceModel
@@ -27,6 +27,8 @@ DEVICE_TEMPERATURE_SET = "Device '{}' temperature set to {}."
 
 device_schema = DeviceSchema()
 device_list_schema = DeviceSchema(many=True)
+
+api = Api()
 
 
 class Device(Resource):
@@ -59,7 +61,7 @@ class Device(Resource):
 
         device_json = request.get_json()
 
-        room_id = device_json("room_id")
+        room_id = device_json.get("room_id")
         if room_id:
             room = RoomModel.find_by_id(room_id)
             if room and room.user_id == get_jwt_identity():
@@ -170,7 +172,11 @@ async def send_credentials(name, chunk_size=20):
 
 
 class DeviceRegister(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('name', type=str, required=True, help='The name comes from the QR code on the device')
+
     @classmethod
+    @api.expect(parser)
     def get(cls):
         name = request.args.get("name")
 

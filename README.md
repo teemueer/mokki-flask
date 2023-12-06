@@ -9,7 +9,7 @@ Project files for Flask server communicating with Raspberry Pi Pico via Bluetoot
 ![Setup](https://github.com/teemueer/mokki-flask/blob/dev/diagrams/init.drawio.png)
 
 
-### Pairing
+### Bluetooth mode
 
 ![Pairing](https://github.com/teemueer/mokki-flask/blob/dev/diagrams/pairing.drawio.png)
 

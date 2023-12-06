@@ -1,7 +1,19 @@
 # mokki-flask
 
-Project files for Flask server
+Project files for Flask server communicating with Raspberry Pi Pico via Bluetooth and MQTT.
 
-## Sequence diagram
+## Sequence diagrams
 
-![sequence diagram](https://github.com/teemueer/mokki-pico/blob/master/Sequence%20diagram.drawio.png)
+### Setup
+
+![Setup](https://github.com/teemueer/mokki-flask/blob/dev/diagrams/init.drawio.png)
+
+
+### Pairing
+
+![Pairing](https://github.com/teemueer/mokki-flask/blob/dev/diagrams/pairing.drawio.png)
+
+
+### Sensor mode
+
+![Setup](https://github.com/teemueer/mokki-flask/blob/dev/diagrams/sensor.drawio.png)

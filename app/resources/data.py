@@ -1,5 +1,5 @@
 from flask import request
-from flask_restx import Resource
+from flask_restx import Resource, reqparse, Api
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from influxdb_client.client.query_api import QueryApi
 
@@ -12,9 +12,22 @@ DEVICE_NOT_FOUND = "Device not found."
 data_schema = DataSchema()
 data_schema_list = DataSchema(many=True)
 
+api = Api()
+
 
 class Data(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument("start_date", type=str, required=False, default="-1h")
+    parser.add_argument("end_date", type=str, required=False, default="now()")
+    parser.add_argument(
+        "data_type",
+        type=str,
+        required=False,
+        choices=["temperature", "humidity", "light_level"],
+    )
+
     @classmethod
+    @api.expect(parser)
     @jwt_required()
     def get(cls, device_id: int):
         device = DeviceModel.find_by_id(device_id)
@@ -30,6 +43,7 @@ class Data(Resource):
             f'from(bucket: "mokki") '
             f"|> range(start: {start_date}, stop: {end_date}) "
             f'|> filter(fn: (r) => r.device == "{device.uid}") '
+            f"|> limit(n:100) "
         )
 
         data_type = args.get("data_type")

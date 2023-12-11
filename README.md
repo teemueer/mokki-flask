@@ -14,15 +14,23 @@ Server is configured to use OpenSSL certificates by default.
 
 Install InfluxDB 2.0 with instructions on their [site](https://docs.influxdata.com/influxdb/v2/install/).
 
-### Generating TPM secrets
-
-Script for generating secrets for devices [here](https://github.com/teemueer/mokki-flask/blob/master/management/tpm.sh)
-
 ### Packages
 
 Install required packages with
 
 `pip install -r requirements.txt`
+
+### Initializng the database
+
+`flask db init`
+
+`flask db migrate`
+
+`flask db upgrade`
+
+### Generating TPM secrets
+
+Script for generating secrets for devices [here](https://github.com/teemueer/mokki-flask/blob/master/management/tpm.sh)
 
 ### Environment values
 
@@ -37,17 +45,11 @@ Install required packages with
 | MQTT_BROKER_URL | MQTT broker URL |
 | MQTT_TLS_CA_CERTS | OpenSSL certificate path |
 
-### Initializng the database
-
-`flask db init`
-
-`flask db migrate`
-
-`flask db upgrade`
-
 ### Starting server
 
 `python run.py`
+
+The user that executes the script needs to belong to bluetooth and tss groups.
 
 ## Sequence diagrams
 
